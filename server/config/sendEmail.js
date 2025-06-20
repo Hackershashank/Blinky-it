@@ -19,15 +19,15 @@ const sendEmail = async ({ sendTo, subject, html }) => {
     });
 
     if (error) {
-      console.error("❌ Error sending email:", error);
-      return null; // clearly indicate failure
+      console.error("Error sending email:", error);
+      return null;
     }
 
-    console.log("✅ Email sent successfully:", data);
+    console.log("Email sent successfully:", data);
     return data;
 
   } catch (err) {
-    console.error("❌ Unexpected error in sendEmail:", err);
+    console.error("Unexpected error in sendEmail:", err);
     return null;
   }
 };
