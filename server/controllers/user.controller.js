@@ -272,7 +272,8 @@ export async function forgotPasswordController(req,res){
         }
         const otp=generatedOtp();
         //otp expiry
-        const expireTime=new Date()+60*60*1000 //1hrs 
+        const expireTime=new Date()+60*60*1000;//1hrs 
+
 
         const updated=await UserModel.findByIdAndUpdate(user._id,{
             forgot_password_otp:otp,
@@ -322,7 +323,7 @@ export async function verifyForgotPasswordOtp(req,res){
                 error:true
             })
         }
-        const currentTime=new Date()
+        const currentTime=new Date().toISOString();
         if(user.forgot_password_expiry<=currentTime){
             return res.status(400).json({
                 message:"OTP is expired, resend the OTP",
@@ -346,6 +347,50 @@ export async function verifyForgotPasswordOtp(req,res){
         })
 
 
+    } catch (error) {
+        return res.status(500).json({
+            message:error.message||error,
+            error:true,
+            success:false
+        })
+    }
+}
+//reset the password
+export async function resetPassword(req,res){
+    try {
+        const {email,newPassword,confirmPassword}=req.body;
+        if(!email || !newPassword || !confirmPassword){
+            return res.status(400).json({
+                message:"Provide all the required fields",
+                error:true,
+                success:false
+            })
+        }
+        const user=await UserModel.findOne({email});
+        if(!user){
+            return res.status(400).json({
+                message:"Email not registered",
+                error:true,
+                success:false
+            })
+        }
+        if(newPassword!=confirmPassword){
+            return res.status(400).json({
+                message:"Password must be Same",
+                error:true,
+                success:false
+            })
+        }
+        const salt=await bcryptjs.genSalt(10)
+        const hashPassword=await bcryptjs.hash(newPassword,salt);
+        const update=await UserModel.findByIdAndUpdate(user._id,{
+            password:hashPassword
+        });
+        return res.json({
+            message:"Password Updated Successfully",
+            error:false,
+            success:true
+        })
     } catch (error) {
         return res.status(500).json({
             message:error.message||error,
