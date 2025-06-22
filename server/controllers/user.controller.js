@@ -303,5 +303,55 @@ export async function forgotPasswordController(req,res){
         })
     }
 }
+//verify forgot password otp
+export async function verifyForgotPasswordOtp(req,res){
+    try {
+        const {email,otp}=req.body;
+        if(!email || !otp){
+            return res.status(400).json({
+                message:"Provide requierd field email and otp.",
+                error:true,
+                success:false
+            }) 
+        }
+        const user=await UserModel.findOne({email});
+        if(!user){
+            return res.status(400).json({
+                message:"Email not registered",
+                success:false,
+                error:true
+            })
+        }
+        const currentTime=new Date()
+        if(user.forgot_password_expiry<=currentTime){
+            return res.status(400).json({
+                message:"OTP is expired, resend the OTP",
+                error:true,
+                success:false
+            })
+        }
+        if(otp !== user.forgot_password_otp){
+            return res.status(400).json({
+                message:"Invalid OTP",
+                error:true,
+                success:false
+            })
+        }
+        // if otp is not expired 
+        // if otp is correct
+        return res.json({
+            message:"OTP verification successful",
+            error:false,
+            success:true
+        })
 
+
+    } catch (error) {
+        return res.status(500).json({
+            message:error.message||error,
+            error:true,
+            success:false
+        })
+    }
+}
 export default verifyEmailController
