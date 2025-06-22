@@ -7,6 +7,8 @@ import generatedRefreshToken from '../utils/generatedRefreshToken.js';
 import uploadImageCloudinary from '../utils/uploadImageCloudinary.js';
 import auth from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
+import generatedOtp from '../utils/generatedOtp.js';
+import forgotPasswordTemplate from '../utils/forgotPasswordTemplate.js';
 
 export async function registerUserController(req, res) {
     try {
@@ -253,6 +255,51 @@ export async function updateUserDetails(req,res){
             message:error.message||error,
             error:true,
             success:false   
+        })
+    }
+}
+//forgot password not logged in
+export async function forgotPasswordController(req,res){
+    try {
+        const {email}=req.body;
+        const user=await UserModel.findOne({email})
+        if(!user){
+            return res.status(400).json({
+                message:"User not registered",
+                error:true,
+                success:false
+            })
+        }
+        const otp=generatedOtp();
+        //otp expiry
+        const expireTime=new Date()+60*60*1000 //1hrs 
+
+        const updated=await UserModel.findByIdAndUpdate(user._id,{
+            forgot_password_otp:otp,
+            forgot_password_expiry:new Date(expireTime).toISOString()
+        })
+
+        await sendEmail({
+            sendTo:email,
+            subject:"Forgot Password from Blinkyit",
+            html:forgotPasswordTemplate({
+                name:user.name,
+                otp:otp
+            })
+        })
+
+        return res.json({
+            message:"check your email",
+            error:false,
+            success:true
+        })
+
+
+    } catch (error) {
+        res.status(500).json({
+            message:error.message||error,
+            success:false,
+            error:true
         })
     }
 }

@@ -60,7 +60,7 @@ const userSchema=new mongoose.Schema({
         type:String,
         default:null
     },
-    forgot_password_expire:{
+    forgot_password_expiry:{
         type:Date,
         default:null
     },
